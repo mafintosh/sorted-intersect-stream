@@ -4,8 +4,8 @@ Intersect streams that emit sorted data
 
 	npm install sorted-intersect-stream
 
-This module is similar to [sorted-intersect](https://github.com/mafintosh/sorted-intersect) except this intersects
-streams that emit sorted data instead of arrays of sorted data
+This module is similar to [sorted-intersect](https://github.com/mafintosh/sorted-intersect)
+except this intersects streams that emit sorted data instead of arrays of sorted data
 
 ## Usage
 
@@ -13,7 +13,7 @@ It is easy to use
 
 ``` js
 var intersect = require('sorted-intersect-stream');
-var es = require('event-stream');
+var es = require('event-stream'); // npm install event-stream
 
 // es.readArray converts an array into a stream
 var sorted1 = es.readArray([0,10,24,42,43,50,55]);
@@ -47,7 +47,7 @@ var sorted1 = es.readArray([{key:'a'}, {key:'b'}, {key:'c'}]);
 var sorted2 = es.readArray([{key:'b'}]);
 
 var intersection = intersect([sorted1, sorted2], function(data) {
-	return data.key
+	return data.key;
 });
 
 intersection.on('data', function(data) {
