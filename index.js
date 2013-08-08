@@ -20,13 +20,20 @@ var reader = function(self, stream, toKey) {
 		ended = true;
 	};
 
+	stream.on('error', function(err) {
+		self.emit('error', err);
+	});
+
 	stream.on('close', onend);
 	stream.on('end', onend);
 	stream.on('data', function(data) {
+		if (!onmatch) return self.emit('error', new Error('source stream does not respect pause'));
 		var key = toKey(data);
 		if (target !== undefined && key < target) return;
 		stream.pause();
-		onmatch(data, key);
+		var tmp = onmatch;
+		onmatch = undefined;
+		tmp(data, key);
 	});
 
 	return function(key, fn) {
