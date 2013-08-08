@@ -19,8 +19,8 @@ var es = require('event-stream'); // npm install event-stream
 var sorted1 = es.readArray([0,10,24,42,43,50,55]);
 var sorted2 = es.readArray([10,42,53,55,60]);
 
-// pass the streams you want to intersect in an array
-var intersection = intersect([sorted1, sorted2]);
+// combine the two streams into a single intersected stream
+var intersection = intersect(sorted1, sorted2);
 
 intersection.on('data', function(data) {
 	console.log('intersected at '+data);
@@ -39,14 +39,16 @@ intersected at 55
 no more intersections
 ```
 
+When the intersection ends the two input streams will be destroyed.
+
 If you are streaming objects instead of integers or strings you should add a `toKey` function as
-the second parameter that returns a key that is sortable
+the second parameter. `toKey` should return a key that is sortable.
 
 ``` js
 var sorted1 = es.readArray([{key:'a'}, {key:'b'}, {key:'c'}]);
 var sorted2 = es.readArray([{key:'b'}]);
 
-var intersection = intersect([sorted1, sorted2], function(data) {
+var intersection = intersect(sorted1, sorted2, function(data) {
 	return data.key;
 });
 

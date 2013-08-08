@@ -1,10 +1,15 @@
 var Readable = require('stream').Readable;
+var util = require('util');
 
 var echo = function(val) {
 	return val;
 };
 
-var reader = function(result, stream, toKey) {
+var destroy = function(stream) {
+	if (stream.readable && stream.destroy) stream.destroy();
+};
+
+var reader = function(self, stream, toKey) {
 	var target;
 	var onmatch;
 	var ended = false;
@@ -25,52 +30,43 @@ var reader = function(result, stream, toKey) {
 	});
 
 	return function(key, fn) {
-		if (ended) return result.push(null);
+		if (ended) return self.push(null);
 		onmatch = fn;
 		target = key;
 		stream.resume();
 	};
 };
 
-module.exports = function(streams, toKey) {
-	if (streams.length === 1) return streams[0];
+var Intersect = function(a, b, toKey) {
+	if (!(this instanceof Intersect)) return new Intersect(a, b, toKey);
+	Readable.call(this, {objectMode:true});
 
 	toKey = toKey || echo;
-	var result = new Readable({objectMode:true});
 
-	if (streams.length === 0) {
-		result.push(null);
-		return result;
-	}
+	this._readA = reader(this, a, toKey);
+	this._readB = reader(this, b, toKey);
 
-	var readers = [];
-	var matches = 0;
-	var offset = 0;
-	var matchKey = undefined;
-	var looping = false;
-
-	var oncandiate = function(cand, candKey) {
-		looping = false;
-
-		if (matchKey !== candKey) {
-			matches = 0;
-			matchKey = candKey;
-		}
-
-		offset = offset < streams.length-1 ? offset+1 : 0;
-		if (++matches !== streams.length) return loop();
-		if (result.push(cand)) return;
-
-		loop();
-	};
-
-	var loop = function() {
-		if (looping) return;
-		looping = true;
-		if (offset === readers.length) readers.push(reader(result, streams[offset], toKey));
-		readers[offset](matchKey, oncandiate);
-	};
-
-	result._read = loop;
-	return result;
+	this.on('end', function() {
+		destroy(a);
+		destroy(b);
+	});
 };
+
+util.inherits(Intersect, Readable);
+
+Intersect.prototype._read = function() {
+	this._loop(undefined);
+};
+
+Intersect.prototype._loop = function(last) {
+	var self = this;
+	self._readA(last, function(match, matchKey) {
+		if (matchKey === last) return self.push(match);
+		self._readB(matchKey, function(other, otherKey) {
+			if (otherKey === matchKey) return self.push(other);
+			self._loop(otherKey);
+		});
+	});
+};
+
+module.exports = Intersect;

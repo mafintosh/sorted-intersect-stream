@@ -20,7 +20,7 @@ b.push(11);
 b.push(20);
 b.push(null);
 
-var intersection = intersect([a, b]);
+var intersection = intersect(a, b);
 var expected = [6,20];
 
 intersection.on('data', function(data) {
