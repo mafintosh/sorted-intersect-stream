@@ -15,10 +15,12 @@ It is easy to use
 var intersect = require('sorted-intersect-stream');
 var es = require('event-stream');
 
-var sorted1 = es.readArray([0,10,24,42,43,50,55]); // converts an array to a stream
+// es.readArray converts an array into a stream
+var sorted1 = es.readArray([0,10,24,42,43,50,55]);
 var sorted2 = es.readArray([10,42,53,55,60]);
 
-var intersection = intersect([sorted1, sorted2]); // pass the streams you want to intersect in an array
+// pass the streams you want to intersect in an array
+var intersection = intersect([sorted1, sorted2]);
 
 intersection.on('data', function(data) {
 	console.log('intersected at '+data);
