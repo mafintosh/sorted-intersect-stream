@@ -45,14 +45,23 @@ var Intersect = function(a, b, toKey) {
 
 	this._readA = reader(this, a, toKey);
 	this._readB = reader(this, b, toKey);
+	this._destroyed = false;
 
 	this.on('end', function() {
+		if (!this.autoDestroy) return;
 		destroy(a);
 		destroy(b);
 	});
 };
 
 util.inherits(Intersect, Readable);
+
+Intersect.prototype.autoDestroy = true;
+
+Intersect.prototype.destroy = function() {
+	this._destroyed = true;
+	this.push(null);
+};
 
 Intersect.prototype._read = function() {
 	this._loop(undefined);
@@ -61,9 +70,9 @@ Intersect.prototype._read = function() {
 Intersect.prototype._loop = function(last) {
 	var self = this;
 	self._readA(last, function(match, matchKey) {
-		if (matchKey === last) return self.push(match);
+		if (matchKey === last && !self._destroyed) return self.push(match);
 		self._readB(matchKey, function(other, otherKey) {
-			if (otherKey === matchKey) return self.push(other);
+			if (otherKey === matchKey && !self._destroyed) return self.push(other);
 			self._loop(otherKey);
 		});
 	});

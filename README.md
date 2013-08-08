@@ -39,7 +39,7 @@ intersected at 55
 no more intersections
 ```
 
-When the intersection ends the two input streams will be destroyed.
+When the intersection ends the two input streams will be destroyed (to disable this set `intersection.autoDestroy = false`).
 
 If you are streaming objects instead of integers or strings you should add a `toKey` function as
 the second parameter. `toKey` should return a key that is sortable.
