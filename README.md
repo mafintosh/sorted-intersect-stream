@@ -1,6 +1,6 @@
 # sorted-intersect-stream
 
-Intersect streams that emit sorted data
+Intersect two streams that emit sorted data
 
 	npm install sorted-intersect-stream
 
