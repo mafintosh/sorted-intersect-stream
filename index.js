@@ -1,8 +1,8 @@
 var util = require('util');
 var Readable = require('stream').Readable;
 
-var echo = function(val) {
-	return val;
+var defaultKey = function(val) {
+	return val.key || val;
 };
 
 var stream2 = function(stream) {
@@ -55,7 +55,7 @@ var Intersect = function(a, b, toKey) {
 	if (!(this instanceof Intersect)) return new Intersect(a, b, toKey);
 	Readable.call(this, {objectMode:true});
 
-	toKey = toKey || echo;
+	toKey = typeof toKey === 'function' ? toKey : defaultKey;
 
 	this._readA = reader(this, a, toKey);
 	this._readB = reader(this, b, toKey);
