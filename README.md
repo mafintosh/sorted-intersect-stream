@@ -64,6 +64,31 @@ intersection.on('data', function(data) {
 A good use-case for this kind of module is implementing something like full-text search where you want to
 intersect multiple index hits.
 
+## Intersecting LevelDB streams
+
+Since [levelup](https://github.com/rvagg/node-levelup) streams are sorted in relation to their keys it is
+easy to intersect them using sorted-intersect-stream.
+
+If we wanted to intersect two namespaces `foo` and `bar` we could do it like so
+
+``` js
+var db = levelup('mydatabase', {valueEncoding:'json'});
+
+var foo = db.createReadStream({
+	start: 'foo:',
+	end: 'foo;'
+});
+
+var bar = db.createReadStream({
+	start: 'bar:',
+	end: 'bar;'
+});
+
+var intersection = intersect(foo, bar, function(data) {
+	return data.key.split(':').slice(1).join(':'); // removes the namespace from the keys
+});
+```
+
 ## License
 
 MIT
