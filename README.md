@@ -45,7 +45,8 @@ When the intersection ends the two input streams will be destroyed (to disable t
 
 If you are streaming objects you should add a `toKey` function as the third parameter.
 `toKey` should return an key representation of the data that can be used to compare objects.
-The keys MUST be sorted.
+
+_The keys MUST be sorted_
 
 ``` js
 var sorted1 = es.readArray([{key:'a'}, {key:'b'}, {key:'c'}]);
