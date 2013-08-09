@@ -1,8 +1,13 @@
-var Readable = require('stream').Readable;
 var util = require('util');
+var Readable = require('stream').Readable;
 
 var echo = function(val) {
 	return val;
+};
+
+var stream2 = function(stream) {
+	if (stream._readableState) return stream;
+	return new Readable({objectMode:true}).wrap(stream);
 };
 
 var destroy = function(stream) {
@@ -10,11 +15,22 @@ var destroy = function(stream) {
 };
 
 var reader = function(self, stream, toKey) {
-	var target;
+	stream = stream2(stream);
+
 	var onmatch;
+	var target;
 	var ended = false;
 
-	stream.pause();
+	var consume = function() {
+		var data;
+		while (onmatch && (data = stream.read())) {
+			var key = toKey(data);
+			if (target !== undefined && key < target) return;
+			var tmp = onmatch;
+			onmatch = undefined;
+			tmp(data, key);
+		}
+	};
 
 	stream.on('error', function(err) {
 		self.emit('error', err);
@@ -22,24 +38,16 @@ var reader = function(self, stream, toKey) {
 
 	stream.on('end', function() {
 		ended = true;
-		if (onmatch) return self.push(null);
+		if (onmatch) self.push(null);
 	});
 
-	stream.on('data', function(data) {
-		if (!onmatch) return self.emit('error', new Error('source stream does not respect pause'));
-		var key = toKey(data);
-		if (target !== undefined && key < target) return;
-		stream.pause();
-		var tmp = onmatch;
-		onmatch = undefined;
-		tmp(data, key);
-	});
+	stream.on('readable', consume);
 
 	return function(key, fn) {
 		if (ended) return self.push(null);
 		onmatch = fn;
 		target = key;
-		stream.resume();
+		consume();
 	};
 };
 
