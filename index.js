@@ -22,12 +22,12 @@ var reader = function(self, stream, toKey) {
 
 	stream.on('end', function() {
 		ended = true;
+		if (onmatch) return self.push(null);
 	});
 
 	stream.on('data', function(data) {
 		if (!onmatch) return self.emit('error', new Error('source stream does not respect pause'));
 		var key = toKey(data);
-		if (ended) console.error('WATA')
 		if (target !== undefined && key < target) return;
 		stream.pause();
 		var tmp = onmatch;
