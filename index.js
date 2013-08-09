@@ -2,7 +2,7 @@ var util = require('util');
 var Readable = require('stream').Readable;
 
 var defaultKey = function(val) {
-	return val.key || val;
+	return val;
 };
 
 var stream2 = function(stream) {

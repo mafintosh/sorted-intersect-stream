@@ -41,18 +41,19 @@ no more intersections
 
 When the intersection ends the two input streams will be destroyed (to disable this set `intersection.autoDestroy = false`).
 
-## LevelDB compatible
+## Streaming objects
 
-If you are streaming objects `data.key` will be used to compare objects.
-This means that sorted-intersect-stream is compatible with [levelup](https://github.com/rvagg/node-levelup) streams
-
-If you want to use another key you should add a `toKey` function as the third parameter `intersect(streamA, streamB, toKey)`.
+If you are streaming objects you should add a `toKey` function as the third parameter.
+`toKey` should return an key representation of the data that can be used to compare objects.
+The keys MUST be sorted.
 
 ``` js
-var sorted1 = es.readArray([{key:'a'}, {key:'b'}, {key:'c'}]); // data.key MUST be sorted
-var sorted2 = es.readArray([{key:'b'}]);
+var sorted1 = es.readArray([{key:'a'}, {key:'b'}, {key:'c'}]);
+var sorted2 = es.readArray([{key:'b'}, {key:'d'}]);
 
-var intersection = intersect(sorted1, sorted2);
+var intersection = intersect(sorted1, sorted2, function(data) {
+	return data.key; // data.key is sorted
+});
 
 intersection.on('data', function(data) {
 	console.log(data); // will print {key:'b'}
