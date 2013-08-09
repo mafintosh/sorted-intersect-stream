@@ -85,7 +85,8 @@ var bar = db.createReadStream({
 });
 
 var intersection = intersect(foo, bar, function(data) {
-	return data.key.split(':').slice(1).join(':'); // removes the namespace from the keys
+	// remove the namespace from the keys so they are comparable
+	return data.key.split(':').slice(1).join(':');
 });
 ```
 
