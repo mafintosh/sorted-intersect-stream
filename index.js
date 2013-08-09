@@ -16,19 +16,18 @@ var reader = function(self, stream, toKey) {
 
 	stream.pause();
 
-	var onend = function() {
-		ended = true;
-	};
-
 	stream.on('error', function(err) {
 		self.emit('error', err);
 	});
 
-	stream.on('close', onend);
-	stream.on('end', onend);
+	stream.on('end', function() {
+		ended = true;
+	});
+
 	stream.on('data', function(data) {
 		if (!onmatch) return self.emit('error', new Error('source stream does not respect pause'));
 		var key = toKey(data);
+		if (ended) console.error('WATA')
 		if (target !== undefined && key < target) return;
 		stream.pause();
 		var tmp = onmatch;
