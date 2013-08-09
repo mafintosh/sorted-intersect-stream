@@ -39,7 +39,7 @@ intersected at 55
 no more intersections
 ```
 
-When the intersection ends the two input streams will be destroyed (to disable this set `intersection.autoDestroy = false`).
+When the intersection ends the two input streams will be destroyed. Set`intersection.autoDestroy = false` to disable this.
 
 ## Streaming objects
 
