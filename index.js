@@ -25,7 +25,7 @@ var reader = function(self, stream, toKey) {
 		var data;
 		while (onmatch && (data = stream.read())) {
 			var key = toKey(data);
-			if (target !== undefined && key < target) return;
+			if (target !== undefined && key < target) continue;
 			var tmp = onmatch;
 			onmatch = undefined;
 			tmp(data, key);
