@@ -32,19 +32,28 @@ var reader = function(self, stream, toKey) {
 		}
 	};
 
+	var onend = function() {
+		if (ended) return;
+		ended = true;
+		if (onmatch) self.destroy();
+	};
+
 	stream.on('error', function(err) {
 		self.emit('error', err);
+		self.destroy();
 	});
 
-	stream.on('end', function() {
-		ended = true;
-		if (onmatch) self.push(null);
+	stream.on('close', function() {
+		if (stream._readableState.ended) return;
+		onend();
 	});
+
+	stream.on('end', onend);
 
 	stream.on('readable', consume);
 
 	return function(key, fn) {
-		if (ended) return self.push(null);
+		if (ended) return self.destroy();
 		onmatch = fn;
 		target = key;
 		consume();
@@ -73,6 +82,7 @@ util.inherits(Intersect, Readable);
 Intersect.prototype.autoDestroy = true;
 
 Intersect.prototype.destroy = function() {
+	if (this._destroyed) return;
 	this._destroyed = true;
 	this.push(null);
 };
