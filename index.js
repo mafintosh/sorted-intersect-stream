@@ -7,7 +7,7 @@ var defaultKey = function(val) {
 
 var stream2 = function(stream) {
 	if (stream._readableState) return stream;
-	return new Readable({objectMode:true}).wrap(stream);
+	return new Readable({objectMode:true, highWaterMark:16}).wrap(stream);
 };
 
 var destroy = function(stream) {
@@ -62,7 +62,7 @@ var reader = function(self, stream, toKey) {
 
 var Intersect = function(a, b, toKey) {
 	if (!(this instanceof Intersect)) return new Intersect(a, b, toKey);
-	Readable.call(this, {objectMode:true});
+	Readable.call(this, {objectMode:true, highWaterMark:16});
 
 	toKey = typeof toKey === 'function' ? toKey : defaultKey;
 
