@@ -24,7 +24,7 @@ var intersection = intersect(a, b);
 var expected = [6,20];
 
 intersection.on('data', function(data) {
-	assert(data, expected.shift());
+	assert(data === expected.shift());
 });
 intersection.on('end', function() {
 	assert(!expected.length)
