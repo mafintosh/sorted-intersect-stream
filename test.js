@@ -7,6 +7,7 @@ var b = new Readable({objectMode:true});
 a._read = b._read = function() {};
 
 a.push(4);
+a.push(4);
 a.push(6);
 a.push(10);
 a.push(14);
@@ -15,13 +16,15 @@ a.push(20);
 a.push(22);
 a.push(null);
 
+b.push(4);
+b.push(4);
 b.push(6);
 b.push(11);
 b.push(20);
 b.push(null);
 
 var intersection = intersect(a, b);
-var expected = [6,20];
+var expected = [4,6,20];
 
 intersection.on('data', function(data) {
 	assert(data === expected.shift());

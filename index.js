@@ -69,6 +69,7 @@ var Intersect = function(a, b, toKey) {
 	this._readA = reader(this, a, toKey);
 	this._readB = reader(this, b, toKey);
 	this._destroyed = false;
+	this._prevKey = null;
 
 	this.on('end', function() {
 		if (!this.autoDestroy) return;
@@ -94,12 +95,18 @@ Intersect.prototype._read = function() {
 Intersect.prototype._loop = function(last) {
 	var self = this;
 	self._readA(last, function(match, matchKey) {
-		if (matchKey === last && !self._destroyed) return self.push(match);
+		if (matchKey === last) return self.push(matchKey, match);
 		self._readB(matchKey, function(other, otherKey) {
-			if (otherKey === matchKey && !self._destroyed) return self.push(other);
+			if (otherKey === matchKey) return self._push(otherKey, other);
 			self._loop(otherKey);
 		});
 	});
+};
+
+Intersect.prototype._push = function(key, val) {
+	if (this._destroyed || this._prevKey === key) return;
+	this._prevKey = key;
+	this.push(val);
 };
 
 module.exports = Intersect;
