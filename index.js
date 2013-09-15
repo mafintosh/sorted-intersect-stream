@@ -95,7 +95,7 @@ Intersect.prototype._read = function() {
 Intersect.prototype._loop = function(last) {
 	var self = this;
 	self._readA(last, function(match, matchKey) {
-		if (matchKey === last) return self.push(matchKey, match);
+		if (matchKey === last) return self._push(matchKey, match);
 		self._readB(matchKey, function(other, otherKey) {
 			if (otherKey === matchKey) return self._push(otherKey, other);
 			self._loop(otherKey);
