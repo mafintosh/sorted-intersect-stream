@@ -4,6 +4,8 @@ Get the intersection of two sorted streams.
 
 	npm install sorted-intersect-stream
 
+[![build status](https://secure.travis-ci.org/mafintosh/sorted-intersect-stream.png)](http://travis-ci.org/mafintosh/sorted-intersect-stream)
+
 ## Usage
 
 It is easy to use
