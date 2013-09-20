@@ -1,11 +1,8 @@
 # sorted-intersect-stream
 
-Intersect two streams that emit sorted data
+Get the intersection of two sorted streams.
 
 	npm install sorted-intersect-stream
-
-This module is similar to [sorted-intersect](https://github.com/mafintosh/sorted-intersect)
-except this intersects streams that emit sorted data instead of arrays of sorted data
 
 ## Usage
 
