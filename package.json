@@ -4,9 +4,17 @@
   "repository": "git://github.com/mafintosh/sorted-intersect-stream.git",
   "license": "MIT",
   "description": "Intersect two streams that emit sorted data",
-  "keywords": ["intersect", "sorted", "stream", "leveldb"],
+  "keywords": [
+    "intersect",
+    "sorted",
+    "stream",
+    "leveldb"
+  ],
   "author": "Mathias Buus Madsen <mathiasbuus@gmail.com>",
   "scripts": {
-  	"test": "node test.js"
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "readable-stream": "~1.1.9"
   }
 }
