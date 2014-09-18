@@ -12,9 +12,12 @@
   ],
   "author": "Mathias Buus Madsen <mathiasbuus@gmail.com>",
   "scripts": {
-    "test": "node test.js"
+    "test": "tape test.js"
   },
   "dependencies": {
-    "readable-stream": "~1.1.9"
+    "readable-stream": "^1.0.31"
+  },
+  "devDependencies": {
+    "tape": "^3.0.0"
   }
 }
