@@ -2,7 +2,7 @@ var util = require('util')
 var Readable = require('readable-stream').Readable
 
 var defaultKey = function(val) {
-  return val
+  return val.key || val
 }
 
 var stream2 = function(stream) {
@@ -105,7 +105,7 @@ Intersect.prototype._loop = function(last) {
 }
 
 Intersect.prototype._push = function(key, val) {
-  if (this._destroyed || this._prevKey === key) return
+  if (this._destroyed || this._prevKey === key) return this._read()
   this._prevKey = key
   this.push(val)
 }
