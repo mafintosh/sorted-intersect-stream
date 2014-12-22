@@ -84,7 +84,7 @@ Intersect.prototype.autoDestroy = true
 Intersect.prototype.destroy = function(err) {
   if (this._destroyed) return
   this._destroyed = true
-  if (err) return this.emit('error', err)
+  if (err) this.emit('error', err)
   this.emit('close')
 }
 
