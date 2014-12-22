@@ -35,12 +35,11 @@ var reader = function(self, stream, toKey) {
   var onend = function() {
     if (ended) return
     ended = true
-    if (onmatch) self.destroy()
+    if (onmatch) self.push(null)
   }
 
   stream.on('error', function(err) {
-    self.emit('error', err)
-    self.destroy()
+    self.destroy(err)
   })
 
   stream.on('close', function() {
@@ -82,11 +81,11 @@ util.inherits(Intersect, Readable)
 
 Intersect.prototype.autoDestroy = true
 
-Intersect.prototype.destroy = function() {
+Intersect.prototype.destroy = function(err) {
   if (this._destroyed) return
   this._destroyed = true
+  if (err) return this.emit('error', err)
   this.emit('close')
-  this.push(null)
 }
 
 Intersect.prototype._read = function() {
