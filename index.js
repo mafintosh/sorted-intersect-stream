@@ -1,27 +1,27 @@
 var util = require('util')
 var Readable = require('readable-stream').Readable
 
-var defaultKey = function(val) {
+var defaultKey = function (val) {
   return val.key || val
 }
 
-var stream2 = function(stream) {
+var stream2 = function (stream) {
   if (stream._readableState) return stream
-  return new Readable({objectMode:true, highWaterMark:16}).wrap(stream)
+  return new Readable({objectMode: true, highWaterMark: 16}).wrap(stream)
 }
 
-var destroy = function(stream) {
+var destroy = function (stream) {
   if (stream.readable && stream.destroy) stream.destroy()
 }
 
-var reader = function(self, stream, toKey) {
+var reader = function (self, stream, toKey) {
   stream = stream2(stream)
 
   var onmatch
   var target
   var ended = false
 
-  var consume = function() {
+  var consume = function () {
     var data
     while (onmatch && (data = stream.read())) {
       var key = toKey(data)
@@ -32,17 +32,17 @@ var reader = function(self, stream, toKey) {
     }
   }
 
-  var onend = function() {
+  var onend = function () {
     if (ended) return
     ended = true
     if (onmatch) self.push(null)
   }
 
-  stream.on('error', function(err) {
+  stream.on('error', function (err) {
     self.destroy(err)
   })
 
-  stream.on('close', function() {
+  stream.on('close', function () {
     if (stream._readableState.ended) return
     onend()
   })
@@ -51,7 +51,7 @@ var reader = function(self, stream, toKey) {
 
   stream.on('readable', consume)
 
-  return function(key, fn) {
+  return function (key, fn) {
     if (ended) return self.destroy()
     onmatch = fn
     target = key
@@ -59,9 +59,9 @@ var reader = function(self, stream, toKey) {
   }
 }
 
-var Intersect = function(a, b, toKey) {
+var Intersect = function (a, b, toKey) {
   if (!(this instanceof Intersect)) return new Intersect(a, b, toKey)
-  Readable.call(this, {objectMode:true, highWaterMark:16})
+  Readable.call(this, {objectMode: true, highWaterMark: 16})
 
   toKey = typeof toKey === 'function' ? toKey : defaultKey
 
@@ -70,7 +70,7 @@ var Intersect = function(a, b, toKey) {
   this._destroyed = false
   this._prevKey = null
 
-  this.on('end', function() {
+  this.on('end', function () {
     if (!this.autoDestroy) return
     destroy(a)
     destroy(b)
@@ -81,29 +81,29 @@ util.inherits(Intersect, Readable)
 
 Intersect.prototype.autoDestroy = true
 
-Intersect.prototype.destroy = function(err) {
+Intersect.prototype.destroy = function (err) {
   if (this._destroyed) return
   this._destroyed = true
   if (err) this.emit('error', err)
   this.emit('close')
 }
 
-Intersect.prototype._read = function() {
+Intersect.prototype._read = function () {
   this._loop(undefined)
 }
 
-Intersect.prototype._loop = function(last) {
+Intersect.prototype._loop = function (last) {
   var self = this
-  self._readA(last, function(match, matchKey) {
+  self._readA(last, function (match, matchKey) {
     if (matchKey === last) return self._push(matchKey, match)
-    self._readB(matchKey, function(other, otherKey) {
+    self._readB(matchKey, function (other, otherKey) {
       if (otherKey === matchKey) return self._push(otherKey, other)
       self._loop(otherKey)
     })
   })
 }
 
-Intersect.prototype._push = function(key, val) {
+Intersect.prototype._push = function (key, val) {
   if (this._destroyed || this._prevKey === key) return this._read()
   this._prevKey = key
   this.push(val)
