@@ -1,6 +1,6 @@
 {
   "name": "sorted-intersect-stream",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "repository": "git://github.com/mafintosh/sorted-intersect-stream.git",
   "license": "MIT",
   "description": "Intersect two streams that emit sorted data",
