@@ -52,7 +52,7 @@ var reader = function (self, stream, toKey) {
   stream.on('readable', consume)
 
   return function (key, fn) {
-    if (ended) return self.destroy()
+    if (ended) return self.push(null)
     onmatch = fn
     target = key
     consume()
