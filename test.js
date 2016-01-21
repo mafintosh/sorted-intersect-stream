@@ -143,3 +143,51 @@ tape('custom objects', function (t) {
     t.end()
   })
 })
+
+tape('primary stream ends early without pending match', function (t) {
+  var a = new Readable({objectMode: true})
+  var b = new Readable({objectMode: true})
+  a._read = b._read = function () {}
+
+  var intersection = intersect(a, b)
+  var acc = []
+
+  intersection.on('end', function () {
+    t.deepEqual(acc, [{key: 1}])
+    t.end()
+  })
+
+  intersection.on('data', acc.push.bind(acc))
+
+  a.push({key: 1})
+  b.push({key: 1})
+  a.push(null)
+
+  setImmediate(function () {
+    b.push(null)
+  })
+})
+
+tape('primary stream ends early with pending match', function (t) {
+  var a = new Readable({objectMode: true})
+  var b = new Readable({objectMode: true})
+  a._read = b._read = function () {}
+
+  var intersection = intersect(a, b)
+  var acc = []
+
+  intersection.on('end', function () {
+    t.deepEqual(acc, [{key: 1}])
+    t.end()
+  })
+
+  intersection.on('data', acc.push.bind(acc))
+
+  a.push({key: 1})
+  a.push(null)
+
+  setImmediate(function () {
+    b.push({key: 1})
+    b.push(null)
+  })
+})
