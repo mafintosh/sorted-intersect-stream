@@ -1,4 +1,5 @@
 var util = require('util')
+var shift = require('stream-shift')
 var Readable = require('readable-stream').Readable
 
 var defaultKey = function (val) {
@@ -23,7 +24,7 @@ var reader = function (self, stream, toKey) {
 
   var consume = function () {
     var data
-    while (onmatch && (data = stream.read())) {
+    while (onmatch && (data = shift(stream))) {
       var key = toKey(data)
       if (target !== undefined && key < target) continue
       var tmp = onmatch

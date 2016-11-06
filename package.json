@@ -15,7 +15,8 @@
     "test": "tape test.js"
   },
   "dependencies": {
-    "readable-stream": "^1.0.31"
+    "readable-stream": "^1.0.31",
+    "stream-shift": "^1.0.0"
   },
   "devDependencies": {
     "standard": "^3.3.0",
