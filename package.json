@@ -15,11 +15,10 @@
     "test": "tape test.js"
   },
   "dependencies": {
-    "readable-stream": "^1.0.31",
-    "stream-shift": "^1.0.0"
+    "streamx": "^2.6.0"
   },
   "devDependencies": {
-    "standard": "^3.3.0",
-    "tape": "^3.0.0"
+    "standard": "^14.3.1",
+    "tape": "^4.13.0"
   }
 }

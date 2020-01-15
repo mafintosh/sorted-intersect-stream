@@ -13,19 +13,19 @@ npm install sorted-intersect-stream
 It is easy to use
 
 ``` js
-var intersect = require('sorted-intersect-stream')
-var from = require('from2-array') // npm install event-stream
+const Intersect = require('sorted-intersect-stream')
+const { Readable } = require('streamx')
 
-// from2-array converts an array into a stream
-var sorted1 = from.obj([0,10,24,42,43,50,55])
-var sorted2 = from.obj([10,42,53,55,60])
+const sorted1 = Readable.from([0, 10, 24, 42, 43, 50, 55])
+const sorted2 = Readable.from([10, 42, 53, 55, 60])
 
 // combine the two streams into a single intersected stream
-var intersection = intersect(sorted1, sorted2)
+const intersection = new Intersect(sorted1, sorted2)
 
 intersection.on('data', function(data) {
-  console.log('intersected at '+data)
+  console.log('intersected at ' + data)
 })
+
 intersection.on('end', function() {
   console.log('no more intersections')
 })
@@ -44,24 +44,19 @@ When the intersection ends the two input streams will be destroyed. Set`intersec
 
 ## Streaming objects
 
-Per default the `.key` property is used to compare objects.
-
-If you are streaming objects you should add a `toKey` function as the third parameter.
-`toKey` should return an key representation of the data that can be used to compare objects.
-
-_The keys MUST be sorted_
+If you are streaming objects sorting is based on the compare function you can pass as the 3rd argument.
 
 ``` js
-var sorted1 = from.obj([{foo:'a'}, {foo:'b'}, {foo:'c'}])
-var sorted2 = from.obj([{foo:'b'}, {foo:'d'}])
+const sorted1 = Readable.from([{ foo:'a' }, { foo:'b' }, { foo:'c' }])
+const sorted2 = Readable.from([{ foo:'b' }, { foo:'d' }])
 
-var intersection = intersect(sorted1, sorted2, function(data) {
-  return data.foo // data.key is sorted
-});
+const i = new Intersect(sorted1, sorted2, function(a, b) {
+  return a.foo < b.foo ? -1 : a.foo > b.foo ? 1 : 0
+})
 
-intersection.on('data', function(data) {
-  console.log(data) // will print {foo:'b'}
-});
+i.on('data', function(data) {
+  console.log(data)
+})
 ```
 
 A good use-case for this kind of module is implementing something like full-text search where you want to
@@ -75,22 +70,28 @@ easy to intersect them using sorted-intersect-stream.
 If we wanted to intersect two namespaces `foo` and `bar` we could do it like so
 
 ``` js
-var db = levelup('mydatabase', {valueEncoding:'json'})
+const db = levelup('mydatabase', {valueEncoding:'json'})
 
-var foo = db.createReadStream({
+const foo = db.createReadStream({
   start: 'foo:',
   end: 'foo;'
 })
 
-var bar = db.createReadStream({
+const bar = db.createReadStream({
   start: 'bar:',
   end: 'bar;'
 })
 
-var intersection = intersect(foo, bar, function(data) {
+const intersection = new Intersect(foo, bar, function (a, b) {
+  const aKey = toKey(a)
+  const bKey = toKey(b)
+  return aKey < bKey ? -1 : aKey > bKey ? 1 : 0
+})
+
+function toKey (data) {
   // remove the namespace from the keys so they are comparable
   return data.key.split(':').slice(1).join(':')
-})
+}
 ```
 
 ## License

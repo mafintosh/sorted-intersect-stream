@@ -1,113 +1,128 @@
-var util = require('util')
-var shift = require('stream-shift')
-var Readable = require('readable-stream').Readable
+const { Readable } = require('streamx')
 
-var defaultKey = function (val) {
-  return val.key || val
-}
+module.exports = class SortedIntersectStream extends Readable {
+  constructor (left, right, compare) {
+    super()
 
-var stream2 = function (stream) {
-  if (stream._readableState) return stream
-  return new Readable({objectMode: true, highWaterMark: 16}).wrap(stream)
-}
+    if (!left.destroy || !right.destroy) throw new Error('Only modern stream supported')
 
-var destroy = function (stream) {
-  if (stream.readable && stream.destroy) stream.destroy()
-}
+    this.left = new Peaker(left)
+    this.right = new Peaker(right)
+    this.compare = compare || defaultCompare
+    this._missing = 2
+    this._onclose = null
+    this._track(left)
+    this._track(right)
+  }
 
-var reader = function (self, stream, toKey) {
-  stream = stream2(stream)
+  _read (cb) {
+    const self = this
 
-  var onmatch
-  var target
-  var ended = false
+    let left = null
+    let right = null
+    let missing = 2
 
-  var consume = function () {
-    var data
-    while (onmatch && (data = shift(stream))) {
-      var key = toKey(data)
-      if (target !== undefined && key < target) continue
-      var tmp = onmatch
-      onmatch = undefined
-      tmp(data, key)
+    this.left.read(function (err, l) {
+      if (err) return cb(err)
+      if (!l) return self._readBoth(null, null, cb)
+      left = l
+      if (!--missing) self._readBoth(left, right, cb)
+    })
+
+    this.right.read(function (err, r) {
+      if (err) return cb(err)
+      if (!r) return self._readBoth(null, null, cb)
+      right = r
+      if (!--missing) self._readBoth(left, right, cb)
+    })
+  }
+
+  _readBoth (l, r, cb) {
+    if (l === null || r === null) {
+      this.push(null)
+      return cb(null)
+    }
+
+    const cmp = this.compare(l, r)
+
+    if (cmp === 0) {
+      this.push(l)
+      this.left.consume()
+      this.right.consume()
+      return cb(null)
+    }
+
+    if (cmp < 0) {
+      this.left.consume()
+    } else {
+      this.right.consume()
+    }
+
+    this._read(cb)
+  }
+
+  _predestroy () {
+    this.left.stream.destroy()
+    this.right.stream.destroy()
+  }
+
+  _destroy (cb) {
+    if (!this.missing) return cb(null)
+    this._onclose = cb
+  }
+
+  _track (stream) {
+    const self = this
+    let closed = false
+
+    stream.on('error', onclose)
+    stream.on('close', onclose)
+
+    function onclose (err) {
+      if (err && typeof err === 'object') self.destroy(err)
+      if (closed) return
+      closed = true
+      if (!--self._missing && self._onclose) self._onclose()
     }
   }
+}
 
-  var onend = function () {
-    if (ended) return
-    ended = true
-    if (onmatch) self.push(null)
+class Peaker {
+  constructor (stream) {
+    this.stream = stream
+    this.stream.on('readable', this._onreadable.bind(this))
+    this.stream.on('end', this._onend.bind(this))
+    this.value = null
+    this._reading = null
+    this._ended = false
   }
 
-  stream.on('error', function (err) {
-    self.destroy(err)
-  })
+  read (cb) {
+    if (this.value) return cb(null, this.value)
+    this._reading = cb
+    this._onreadable()
+  }
 
-  stream.on('close', function () {
-    if (stream._readableState.ended) return
-    onend()
-  })
+  consume () {
+    this.value = null
+  }
 
-  stream.on('end', onend)
+  _onend () {
+    this._ended = true
+    this._onreadable()
+  }
 
-  stream.on('readable', consume)
-
-  return function (key, fn) {
-    if (ended) return self.push(null)
-    onmatch = fn
-    target = key
-    consume()
+  _onreadable () {
+    if (this.value) return
+    this.value = this.stream.read()
+    if ((this.value !== null || this._ended) && this._reading) {
+      const cb = this._reading
+      this._reading = null
+      cb(null, this.value)
+    }
   }
 }
 
-var Intersect = function (a, b, toKey) {
-  if (!(this instanceof Intersect)) return new Intersect(a, b, toKey)
-  Readable.call(this, {objectMode: true, highWaterMark: 16})
-
-  toKey = typeof toKey === 'function' ? toKey : defaultKey
-
-  this._readA = reader(this, a, toKey)
-  this._readB = reader(this, b, toKey)
-  this._destroyed = false
-  this._prevKey = null
-
-  this.on('end', function () {
-    if (!this.autoDestroy) return
-    destroy(a)
-    destroy(b)
-  })
+function defaultCompare (a, b) {
+  return a < b ? -1 : a > b ? 1 : 0
 }
-
-util.inherits(Intersect, Readable)
-
-Intersect.prototype.autoDestroy = true
-
-Intersect.prototype.destroy = function (err) {
-  if (this._destroyed) return
-  this._destroyed = true
-  if (err) this.emit('error', err)
-  this.emit('close')
-}
-
-Intersect.prototype._read = function () {
-  this._loop(undefined)
-}
-
-Intersect.prototype._loop = function (last) {
-  var self = this
-  self._readA(last, function (match, matchKey) {
-    if (matchKey === last) return self._push(matchKey, match)
-    self._readB(matchKey, function (other, otherKey) {
-      if (otherKey === matchKey) return self._push(otherKey, match)
-      self._loop(otherKey)
-    })
-  })
-}
-
-Intersect.prototype._push = function (key, val) {
-  if (this._destroyed || this._prevKey === key) return this._read()
-  this._prevKey = key
-  this.push(val)
-}
-
-module.exports = Intersect
